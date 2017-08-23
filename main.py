@@ -6,6 +6,7 @@ import os
 import json
 import sys
 import ConfigParser
+from multiprocessing import Process
 from fuction import zabbixapi
 from dbconn import get_status
 
@@ -30,7 +31,7 @@ def update_graph_name(hostname,itemname,desc,user,password,urlline):
             break
 
 
-def update_item_status(hostname,itemname):
+def update_item_status(hostname,itemname,user,password,urlline):
     test = zabbixapi(urlline,user,password)
     res = test.host_get(hostname)
     hostid = res[0]['hostid']
@@ -39,7 +40,7 @@ def update_item_status(hostname,itemname):
         itemid = item['result'][i]['itemid']
         name = item['result'][i]['name']
         status = item['result'][i]['status']
-        if itemname in name :
+        if itemname == name.split(".")[0] :
             params = {"itemid":itemid,"status":"0"}
             res = test.item_update(params)
             print res
@@ -87,12 +88,16 @@ def main():
         		itemname = res[i][1]
         		stats = res[i][2]
         		desc  = res[i][3]
-        		try:
-        			update_graph_name(host,itemname,desc,zb_user,zb_pass,zb_url)
-
-        		except:
-        			continue
+        		p1 = Process(target=update_graph_name,args=(host,itemname,desc,zb_user,zb_pass,zb_url))
+        		pi.start()
+        	#	update_graph_name(host,itemname,desc,zb_user,zb_pass,zb_url)
 
         		if stats == '1':
-        			rest = update_item_status(host,itemname)
+        			p2 = Process(target=update_item_status,args=(host,itemname,zb_user,zb_pass,zb_url))
+        			p2.start()
+        			p2.join()
 
+        			#rest = update_item_status(host,itemname,zb_user,zb_pass,zb_url)
+
+if __name__ == "__main__":
+    main()

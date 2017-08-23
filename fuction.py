@@ -6,9 +6,12 @@ import json
 import urllib2
 import sys
 class zabbixapi:
-    def __init__(self，urlset,user,password):
+    def __init__(self,urlset,user,password):
         self.url = "http://"+urlset+"/api_jsonrpc.php"
         self.header = {"Content-Type": "application/json"}
+
+        self.user = user
+        self.password = password
         self.authID = self.user_login()
 
 #get authentication code 
@@ -117,8 +120,9 @@ class zabbixapi:
                 "params": {
                     "output": "extend",
                     "hostids": hostid,
-                    "sortfield": "name"
+        #            "filter":{"name":itemname},
                 },
+                
                 "auth": self.authID, 
                 "id": 1           
             
