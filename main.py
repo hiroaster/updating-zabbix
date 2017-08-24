@@ -22,7 +22,7 @@ def update_interface_info(params):
 	zb_pass = params['zb_pass']
 	zb_url = params['zb_url']
 
-    test = zabbixapi(zb_url,zb_user,zb_pass)
+	test = zabbixapi(zb_url,zb_user,zb_pass)
     hostinfo = test.host_get(hostname)
     hostid = hostinfo[0]['hostid']
 
@@ -46,12 +46,12 @@ def update_interface_info(params):
         itemid = item['result'][i]['itemid']
         name = item['result'][i]['name']
         
-        if status == '1':
-        	if itemname == name.split(".")[0] :
-            	sta_params = {"itemid":itemid,"status":"0"}
-            	res1 = test.item_update(sta_params)
-            	print res1
-            	break
+        if stats == '1':
+        	if itemname == name.split(".")[0]:
+        		sta_params = {"itemid":itemid,"status":"0"}
+        		res1 = test.item_update(sta_params)
+        		print res1
+
 
 
 def main():
@@ -74,7 +74,6 @@ def main():
     else:
         sys.exit()
 
-#determine if the new port-status changed,if changed update db.
     filename = "swlist.txt"
     info=open(filename,'r').readlines()
     for line in info:
@@ -111,9 +110,6 @@ def main():
         	pool.join()
 
         	print host+" is done"
-
-
-        			#rest = update_item_status(host,itemname,zb_user,zb_pass,zb_url)
 
 if __name__ == "__main__":
     main()
