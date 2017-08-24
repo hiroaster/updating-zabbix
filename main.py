@@ -6,16 +6,27 @@ import os
 import json
 import sys
 import ConfigParser
-from multiprocessing import Process
+from multiprocessing import Process,Pool
 from fuction import zabbixapi
 from dbconn import get_status
 
 
 
-def update_graph_name(hostname,itemname,desc,user,password,urlline):
-    test = zabbixapi(urlline,user,password)
+def update_interface_info(params):
+
+	hostname = params['hostname']
+	itemname = params['itemname']
+	desc = params['desc']
+	stats = params['stats']
+	zb_user = params['zb_user']
+	zb_pass = params['zb_pass']
+	zb_url = params['zb_url']
+
+    test = zabbixapi(zb_url,zb_user,zb_pass)
     hostinfo = test.host_get(hostname)
     hostid = hostinfo[0]['hostid']
+
+        #sync port description
     res = test.temp_graph_get(hostid)
     for i in range(len(res['result'])):
         graphid = res['result'][i]['graphid']
@@ -25,30 +36,22 @@ def update_graph_name(hostname,itemname,desc,user,password,urlline):
         else:
             newname  = graphname.split("-")[0]
         if  itemname == newname :
-            params = {"graphid":graphid,'name':itemname+"-"+desc}  
-            res = test.update_graph(params)    
+            graph_params = {"graphid":graphid,'name':itemname+"-"+desc}  
+            res = test.update_graph(graph_params)    
             print res
             break
 
-
-def update_item_status(hostname,itemname,user,password,urlline):
-    test = zabbixapi(urlline,user,password)
-    res = test.host_get(hostname)
-    hostid = res[0]['hostid']
-    item = test.item_get(hostid)
+	item = test.item_get(hostid)
     for i in range(len(item['result'])):
         itemid = item['result'][i]['itemid']
         name = item['result'][i]['name']
-        status = item['result'][i]['status']
-        if itemname == name.split(".")[0] :
-            params = {"itemid":itemid,"status":"0"}
-            res = test.item_update(params)
-            print res
-
-
-
-
-
+        
+        if status == '1':
+        	if itemname == name.split(".")[0] :
+            	sta_params = {"itemid":itemid,"status":"0"}
+            	res1 = test.item_update(sta_params)
+            	print res1
+            	break
 
 
 def main():
@@ -75,6 +78,7 @@ def main():
     filename = "swlist.txt"
     info=open(filename,'r').readlines()
     for line in info:
+    	pool = Pool(10)
         try:
             hostname= line.split()[2]
 
@@ -88,14 +92,26 @@ def main():
         		itemname = res[i][1]
         		stats = res[i][2]
         		desc  = res[i][3]
-        		p1 = Process(target=update_graph_name,args=(host,itemname,desc,zb_user,zb_pass,zb_url))
-        		pi.start()
-        	#	update_graph_name(host,itemname,desc,zb_user,zb_pass,zb_url)
 
-        		if stats == '1':
-        			p2 = Process(target=update_item_status,args=(host,itemname,zb_user,zb_pass,zb_url))
-        			p2.start()
-        			p2.join()
+        		params = {
+
+        		'hostname':host,
+        		'itemname':itemname,
+        		'stats':stats,
+        		'desc':desc,
+        		'zb_user':zb_user,
+        		'zb_pass':zb_pass,
+        		'zb_url':zb_url,
+
+        		}
+
+        		pool.apply_async(update_interface_info,(params,))
+
+        	pool.close()
+        	pool.join()
+
+        	print host+" is done"
+
 
         			#rest = update_item_status(host,itemname,zb_user,zb_pass,zb_url)
 
