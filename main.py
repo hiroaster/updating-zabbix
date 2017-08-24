@@ -1,15 +1,14 @@
 #!/usr/bin/env python
-#edit: wenyang
+# edit: wenyang
 #
-#coding:utf-8
+# coding:utf-8
 import os
 import json
 import sys
 import ConfigParser
-from multiprocessing import Process,Pool
+from multiprocessing import Process, Pool
 from fuction import zabbixapi
 from dbconn import get_status
-
 
 
 def update_interface_info(params):
@@ -22,11 +21,11 @@ def update_interface_info(params):
 	zb_pass = params['zb_pass']
 	zb_url = params['zb_url']
 
-	test = zabbixapi(zb_url,zb_user,zb_pass)
+	test = zabbixapi(zb_url, zb_user, zb_pass)
     hostinfo = test.host_get(hostname)
     hostid = hostinfo[0]['hostid']
 
-        #sync port description
+        # sync port description
     res = test.temp_graph_get(hostid)
     for i in range(len(res['result'])):
         graphid = res['result'][i]['graphid']
@@ -56,10 +55,10 @@ def update_interface_info(params):
 
 def main():
 
-    #define a list for store msg
+    # define a list for store msg
     a=[]
 
-    #read db config file
+    # read db config file
     cf = ConfigParser.ConfigParser()
     cf.read("db.conf")
     secs = cf.sections()
