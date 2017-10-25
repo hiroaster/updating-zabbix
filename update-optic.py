@@ -21,35 +21,23 @@ def update_interface_info(params):
     zb_url = params['zb_url']
 
     test = zabbixapi(zb_url, zb_user, zb_pass)
-    hostinfo = test.host_get(hostname)
+    hostinfo = test.host_get('dg-optic-0')
     hostid = hostinfo[0]['hostid']
-
-    # sync port description
-    res = test.temp_graph_get(hostid)
-    for i in range(len(res['result'])):
-        graphid = res['result'][i]['graphid']
-        graphname = res['result'][i]['name']
-        if 'Eth-Trunk' in graphname:
-            newname = graphname.split("-")[0] + "-" + graphname.split("-")[1]
-        else:
-            newname = graphname.split("-")[0]
-        if itemname == newname:
-            graph_params = {"graphid": graphid, 'name': itemname + "-" + desc}
-            res = test.update_graph(graph_params)
-            print res
-            break
 
     item = test.item_get(hostid)
     for i in range(len(item['result'])):
         itemid = item['result'][i]['itemid']
         name = item['result'][i]['name']
-
-        if stats == '1':
-            if itemname == name.split(".")[0]:
+        newname = hostname+"."+itemname+"."
+        if newname in name:
+            if stats == '1':
+#            if itemname == name.split(".")[0]:
                 sta_params = {"itemid": itemid, "status": "0"}
+            else:
+                sta_params = {"itemid": itemid, "status": "1"}
                 res1 = test.item_update(sta_params)
                 print res1
-
+#
 
 def main():
 
